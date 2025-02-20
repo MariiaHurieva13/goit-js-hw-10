@@ -1,65 +1,47 @@
-// Описаний в документації
-import flatpickr from 'flatpickr';
-// Додатковий імпорт стилів
-import 'flatpickr/dist/flatpickr.min.css';
-const startBtn = document.querySelector('[data-start]');
-const days = document.querySelector('[data-days]');
-const hours = document.querySelector('[data-hours]');
-const minutes = document.querySelector('[data-minutes]');
-const seconds = document.querySelector('[data-seconds]');
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
+import { refs, convertMs } from "./storage"; 
+import iziToast from "izitoast";
+import "izitoast/dist/css/iziToast.min.css";
 
-let userSelectedDate;
+flatpickr(refs.input, refs.options);
 
-startBtn.addEventListener('click', onClick);
-const options = {
-  enableTime: true,
-  time_24hr: true,
-  defaultDate: new Date(),
-  minuteIncrement: 1,
-  onClose(selectedDates) {
-    const startTime = Date.now();
-    if (selectedDates[0] <= startTime) {
-      alert('Please choose a date in the future');
-      startBtn.setAttribute('disabled', 'true');
-    } else {
-      startBtn.removeAttribute('disabled');
-      userSelectedDate = selectedDates[0];
+let countdownInterval;
+
+refs.btn.setAttribute("disabled", true);
+
+refs.btn.addEventListener("click", () => {
+    const selectedDate = refs.options.userSelectedDate;
+
+    if (!selectedDate || selectedDate.getTime() <= Date.now()) {
+        refs.btn.setAttribute("disabled", true);
+        return;
     }
-  },
-};
 
-flatpickr('#datetime-picker', options);
+    refs.btn.setAttribute("disabled", true);
+    refs.input.setAttribute("disabled", true);
+    refs.btn.style.pointerEvents = "none";
 
-function onClick() {
-  setInterval(() => {
-    const timerTime = userSelectedDate.getTime() - Date.now();
-    const obj = convertMs(timerTime);
-    days.innerHTML = obj.days;
-    hours.innerHTML = obj.hours;
-    minutes.innerHTML = obj.minutes;
-    seconds.innerHTML = obj.seconds;
-  }, 1000);
-}
+    countdownInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const ms = selectedDate - now;
 
-function convertMs(ms) {
-  // Number of milliseconds per unit of time
-  const second = 1000;
-  const minute = second * 60;
-  const hour = minute * 60;
-  const day = hour * 24;
+        if (ms <= 0) {
+            clearInterval(countdownInterval);
+            refs.days.textContent = "00";
+            refs.hours.textContent = "00";
+            refs.minutes.textContent = "00";
+            refs.seconds.textContent = "00";
 
-  // Remaining days
-  const days = Math.floor(ms / day);
-  // Remaining hours
-  const hours = Math.floor((ms % day) / hour);
-  // Remaining minutes
-  const minutes = Math.floor(((ms % day) % hour) / minute);
-  // Remaining seconds
-  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+            refs.input.removeAttribute("disabled");
+            return;
+        }
 
-  return { days, hours, minutes, seconds };
-}
+        const { days, hours, minutes, seconds } = convertMs(ms);
 
-// console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
-// console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
-// console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
+        refs.days.textContent = String(days).padStart(2, "0");
+        refs.hours.textContent = String(hours).padStart(2, "0");
+        refs.minutes.textContent = String(minutes).padStart(2, "0");
+        refs.seconds.textContent = String(seconds).padStart(2, "0");
+    }, 1000);
+});
