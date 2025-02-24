@@ -1,58 +1,41 @@
-import iziToast from 'izitoast';
-import 'izitoast/dist/css/iziToast.min.css';
-import '../css/custom-easytoast.css';
-import pathSuccessIcon from "../img/icon-success.svg";
-import pathErrorIcon from "../img/icon-error.svg";
+import iziToast from "izitoast";
+import "izitoast/dist/css/iziToast.min.css";
 
-const iconUrl = status ? pathSuccessIcon : pathErrorIcon
 
-const form = document.querySelector('.form');
-const delayInput = document.querySelector('input[name="delay"]');
+const form = document.querySelector(".form");
 
-form.addEventListener('submit', handleSubmit);
-
-function handleSubmit(e) {
+form.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const stateRadio = document.querySelector('input[name="state"]:checked');
+  const form = e.target;
+  const delay = Number(form.elements.delay.value);
+  const state = form.elements.state.value;
 
-  const state = stateRadio.value === 'fulfilled' ? true : false;
-  const delay = +delayInput.value;
-
-  const promise = new Promise((resolve, reject) => {
+  const prm = new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (state) {
-        resolve(delay);
-      } else {
-        reject(delay);
-      }
-    }, delay);
+      state === "fulfilled" ? resolve(delay) : reject(delay);
+        }, delay);
+    });
+
+  prm
+  .then(delay => {
+        
+      iziToast.show({
+        backgroundColor: 'rgba(89, 161, 13, 1)',
+        messageColor: `rgba(255, 255, 255, 1)`,
+        close: `false`,
+        position: "topRight",
+        message: `✅ Fulfilled promise in ${delay}ms`
   });
-
-  promise
-    .then(delay => showMessage(true, delay))
-    .catch(delay => showMessage(false, delay));
-}
-
-function showMessage(status, delay) {
-  const title = status ? 'OK' : 'Error';
-  const message = status
-    ? `Fulfilled promise in ${delay}ms`
-    : `Rejected promise in ${delay}ms`;
-  const iconUrl = status ? pathSuccessIcon : pathErrorIcon;
-  const backgroundColor = status ? '#59A10D' : '#EF4040';
-
-  iziToast.show({
-    position: 'topRight',
-    title,
-    titleSize: '16px',
-    titleLineHeight: '24px',
-    titleColor: 'white',
-    message,
-    messageSize: '16px',
-    messageLineHeight: '24px',
-    messageColor: 'white',
-    iconUrl,
-    backgroundColor,
+    })
+    .catch(delay => {
+      iziToast.show({
+        backgroundColor: 'rgba(239, 64, 64, 1)',
+        messageColor: `rgba(255, 255, 255, 1)`,
+        close: `false`,
+        position: "topRight",
+        message: `❌ Rejected promise in ${delay} ms`
   });
-}
+    });
+  form.reset()
+  })
